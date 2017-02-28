@@ -18,17 +18,28 @@ public class UserBasedCollaborativeFilteringTest {
     String[] result = {"result5.txt", "result10.txt", "result20.txt"};
 
     @Test
-    public void TestCosineVectorSimilarity() throws IOException {
+    public void TestUserBasedCollaborativeFiltering() throws IOException {
         System.out.println("Start to test User-Based Collaborative Filtering ...");
         // setTrainFile
         System.out.println("Set " + train + " data");
         sol.setTrainDataSet(train);
+
         // execution
+        // run Cosine Vector Similarity
         String path = "./Results/UserBased/CosineVecSim/";
         for (int i = 0; i < text.length; i++) {
-            // Doing CosineVectorSimilarity
             System.out.println("Execuing with Cosine Similarity method");
-            sol.CosineSimilarity(text[i]);
+            sol.SetTestDataAndPredict(text[i], Methods.MethodType.CosVecSim);
+            // generate result to txt file
+            System.out.println("Generate " + result[i] + " file");
+            sol.getRecommendResult(path, result[i]);
+        }
+
+        // run Pearson Correlation
+        path = "./Results/UserBased/PearsonCorr/";
+        for (int i = 0; i < text.length; i++) {
+            System.out.println("Execuing with Pearon Correlation method");
+            sol.SetTestDataAndPredict(text[i], Methods.MethodType.PearsonCorr);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
             sol.getRecommendResult(path, result[i]);
