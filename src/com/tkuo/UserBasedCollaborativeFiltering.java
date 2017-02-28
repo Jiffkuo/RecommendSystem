@@ -51,8 +51,14 @@ public class UserBasedCollaborativeFiltering {
     }
 
     // generate result to text file
-    public void getRecommendResult(String fName) throws IOException {
-        FileWriter fWriter = new FileWriter(fName);
+    public void getRecommendResult(String path, String fName) throws IOException {
+        File directory = new File(path);
+        // create directory
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        // write file
+        FileWriter fWriter = new FileWriter(path + fName);
         BufferedWriter bufWriter = new BufferedWriter(fWriter);
         String prefix = "";
         for (List<Integer> result : resultSet) {
