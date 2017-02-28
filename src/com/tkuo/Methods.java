@@ -14,7 +14,10 @@ import java.util.List;
 public class Methods {
 
     // private data variable
+    // store weight for each user (userID: 1 - 200)
     private List<Double> weightList;
+    private double       activeUserAvgRating;
+    private List<Double> similarUsersAvgRating;
 
     // Support two methods
     public enum MethodType {
@@ -24,6 +27,8 @@ public class Methods {
     // constructor
     public Methods() {
         weightList = new ArrayList<>();
+        activeUserAvgRating = 3;
+        similarUsersAvgRating = new ArrayList<>();
     }
 
     // clearn weightList for new user prediction
@@ -33,6 +38,7 @@ public class Methods {
 
     // CosineVectorSimilarity
     // assume vec1.length = vec2.length
+    // vec1: active user, vec2: similar user
     public double CosVecSim(ArrayList<Integer> vec1, ArrayList<Integer> vec2) {
         int dotProduct = 0;
         int norm1 = 0;
@@ -58,13 +64,14 @@ public class Methods {
 
     // Pearson Correlation
     // assume vec1.length = vec2.length
+    // vec1: active user, vec2: similar user
     // Similar with Cosine Vector Similarity, need to calculate average rating
     public double PearsonCorr(ArrayList<Integer> vec1, ArrayList<Integer> vec2) {
         int dotProduct = 0;
         int norm1 = 0;
         int norm2 = 0;
-        int avgVec1 = 0;
-        int avgVec2 = 0;
+        double avgVec1 = 0;
+        double avgVec2 = 0;
         int lenVec = vec1.size();
 
         if (lenVec != vec2.size()) {
@@ -78,6 +85,11 @@ public class Methods {
         }
         avgVec1 /= lenVec;
         avgVec2 /= lenVec;
+
+        // record average for prediction usage
+        activeUserAvgRating = avgVec1;
+        similarUsersAvgRating.add(avgVec2);
+
         // accumulate weight
         for (int i = 0; i < lenVec; i++) {
             dotProduct += (vec1.get(i) - avgVec1) * (vec2.get(i) - avgVec2);
@@ -95,19 +107,24 @@ public class Methods {
     // Use specific method to calculate weight for each user
     public void executeWeight(List<HashMap<Integer, Integer>> trainDataSet,
                               List<Integer> mList, List<Integer> rList, MethodType type) {
-        ArrayList<Integer> vec1; // train data
-        ArrayList<Integer> vec2; // test data
+        // vec1: active user, vec2: similar user
+        ArrayList<Integer> vec1;
+        ArrayList<Integer> vec2;
+        // clear average rating record
+        activeUserAvgRating = 3;
+        similarUsersAvgRating.clear();
+
         // find weight for each user (userID: 1 - 200)
         for (int user = 0; user < trainDataSet.size(); user++) {
-            // find common movieID for CosVecSim
+            // find common movieID
             HashMap<Integer, Integer> traindata = trainDataSet.get(user);
             vec1 = new ArrayList<>();
             vec2 = new ArrayList<>();
             for (int movieID = 0; movieID < mList.size(); movieID++) {
                 int key = mList.get(movieID);
                 if (traindata.containsKey(key)) {
-                    vec1.add(traindata.get(key));
-                    vec2.add(rList.get(movieID));
+                    vec1.add(rList.get(movieID));
+                    vec2.add(traindata.get(key));
                 }
             }
             // store weight for each user (userID: 1 - 200)
@@ -128,12 +145,13 @@ public class Methods {
     }
 
     // Based on weight information to do rating prediction
-    public int PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID) {
+    public double PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID) {
         // default prediction rating = 3 if no relevant info
-        int predictRating = 3;
+        double predictRating = 3;
         double totalWeight = 0;
         double totalRating = 0;
         int rating = 0;
+
         // The number of user should be the same
         if (trainDataSet.size() != weightList.size()) {
             System.err.println("[Error] Cannot predict because invalid dataset");
@@ -149,23 +167,58 @@ public class Methods {
                 System.err.println("[Error] No record (userID: " + (user+1) + "movieID: " + movieID + ")");
                 rating = 0; // no rating record
             }
+            // Will affect result if weight = 0
             if (rating == 0) {
                 continue;
             }
+
             totalWeight += weightList.get(user);
             totalRating += weightList.get(user) * rating;
         }
         if (totalWeight != 0) {
-            predictRating = (int) Math.round(totalRating / totalWeight);
+            predictRating = totalRating / totalWeight;
         }
         return predictRating;
     }
 
     // Based on weight information to do rating prediction
-    public int PredictByPearsonCorr(List<HashMap<Integer, Integer>> trainDataSet, int movieID) {
-        // default prediction rating = 3 if no relevant info
-        int predictRating = 3;
+    public double PredictByPearsonCorr(List<HashMap<Integer, Integer>> trainDataSet, int movieID) {
+        // set active user average rating if no relevant info
+        double predictRating = activeUserAvgRating;
+        double totalWeight = 0;
+        double totalRating = 0;
+        int rating = 0;
 
+        // The number of user should be the same
+        int similarUserSize = trainDataSet.size();
+        if (similarUserSize != weightList.size() || similarUserSize != similarUsersAvgRating.size() ) {
+            System.err.print("[Error] Cannot predict because invalid dataset:");
+            System.err.print(" Size of User = " + similarUserSize);
+            System.err.print(" Size of weight = " + weightList.size());
+            System.err.print(" Size of AvgRating = " + similarUsersAvgRating.size());
+            return 0;
+        }
+        // Rating prediction (Cosine Similarity)
+        // Assume all users are the most similar users
+        for (int user = 0; user < trainDataSet.size(); user++) {
+            HashMap<Integer, Integer> traindata = trainDataSet.get(user);
+            if (traindata.containsKey(movieID)) {
+                rating = traindata.get(movieID);
+            } else {
+                System.err.println("[Error] No record (userID: " + (user+1) + "movieID: " + movieID + ")");
+                rating = 0; // no rating record
+            }
+            // TODO: need to exam it
+            if (rating == 0) {
+                continue;
+            }
+
+            totalWeight += Math.abs(weightList.get(user));
+            totalRating += weightList.get(user) * (rating - similarUsersAvgRating.get(user));
+        }
+        if (totalWeight != 0) {
+            predictRating = activeUserAvgRating + totalRating / totalWeight;
+        }
         return predictRating;
     }
 
