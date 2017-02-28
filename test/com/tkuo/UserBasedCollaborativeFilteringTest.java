@@ -5,7 +5,9 @@ import org.junit.Test;
 import java.io.IOException;
 
 /**
- * Created by mac on 2017/2/27.
+ * Created by Tzu-Chi Kuo on 2017/2/27.
+ * Purpose:
+ *  test all functions
  */
 public class UserBasedCollaborativeFilteringTest {
     UserBasedCollaborativeFiltering sol = new UserBasedCollaborativeFiltering();
@@ -22,13 +24,14 @@ public class UserBasedCollaborativeFilteringTest {
         System.out.println("Set " + train + " data");
         sol.setTrainDataSet(train);
         // execution
-        for (int i = 0; i < 1; i++) {
+        String path = "./Results/UserBased/CosineVecSim/";
+        for (int i = 0; i < text.length; i++) {
             // Doing CosineVectorSimilarity
             System.out.println("Execuing with Cosine Similarity method");
             sol.CosineSimilarity(text[i]);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
-            sol.getRecommendResult(result[i]);
+            sol.getRecommendResult(path, result[i]);
         }
     }
 
