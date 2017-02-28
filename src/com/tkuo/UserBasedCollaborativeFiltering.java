@@ -109,19 +109,30 @@ public class UserBasedCollaborativeFiltering {
                     ratingList.clear();
                 }
                 // generate prediction result
+                double outRating = 0;
                 result = new ArrayList<>();
-                result.add(userID);
-                result.add(movieID);
                 switch (type.name()) {
                     case "CosVecSim":
-                        result.add(mthds.PredictByCosVecSim(trainDataSet, movieID));
+                        outRating = mthds.PredictByCosVecSim(trainDataSet, movieID);
                         break;
                     case "PearsonCorr":
-                        result.add(mthds.PredictByPearsonCorr(trainDataSet, movieID));
+                        outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID);
                         break;
                     default:
                         System.out.println("[Error]: Cannot recognize the method");
                 }
+                // debug purpose
+                //System.out.println(outRating);
+                // round off
+                outRating = Math.round(outRating);
+                if (outRating > 5) {
+                    outRating = 5;
+                } else if (outRating < 1) {
+                    outRating = 1;
+                }
+                result.add(userID);
+                result.add(movieID);
+                result.add((int)outRating);
                 resultSet.add(result);
             } else {
                 System.err.println("[Error] invalid data (MovieID: "
