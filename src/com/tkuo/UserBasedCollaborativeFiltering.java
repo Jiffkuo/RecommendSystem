@@ -9,7 +9,7 @@ import java.util.List;
  * Created by Tzu-Chi Kuo on 2017/2/27.
  * Purpose:
  *   implement User-Based Collaborative Filtering Algorithm
- *   Cosine similarity method
+ *   Cosine Similarity method
  *   Pearson Correlation method
  */
 
@@ -22,8 +22,9 @@ public class UserBasedCollaborativeFiltering {
     // Constructor
     public UserBasedCollaborativeFiltering() {
         trainDataSet = new ArrayList<>();
-        resultSet = new ArrayList<>();
     }
+
+
 
     // Set train.txt to trainDataSet
     public void setTrainDataSet(String fName) throws IOException{
@@ -71,7 +72,8 @@ public class UserBasedCollaborativeFiltering {
     }
 
     // CosineVectorSimilarity method
-    public void CosineSimilarity(String fName) throws IOException{
+    // Assume userID is sorted order, so the sequence in List or Hash is based on the sorted userID
+    public void SetTestDataAndPredict(String fName, Methods.MethodType type) throws IOException{
         // Read Predication file
         FileReader fReader = new FileReader(fName);
         BufferedReader bufReader = new BufferedReader(fReader);
@@ -83,6 +85,8 @@ public class UserBasedCollaborativeFiltering {
         // Method function
         Methods mthds = new Methods();
 
+        // set new resultSet
+        resultSet = new ArrayList<>();
         while ((line = bufReader.readLine()) != null) {
             String[] oneSet = line.split(" ");
             int userID = Integer.valueOf(oneSet[0]);
@@ -95,17 +99,29 @@ public class UserBasedCollaborativeFiltering {
                 movieIDList.add(movieID);
                 ratingList.add(rating);
             } else if (rating == 0) {
+                // new user to predict
                 if (curUserID != userID) {
                     mthds.clearWeightList();
-                    mthds.execCosVecSim(trainDataSet, movieIDList, ratingList);
+                    mthds.executeWeight(trainDataSet, movieIDList, ratingList, type);
                     curUserID = userID;
+                    // clean movie and rating list after weighting
                     movieIDList.clear();
                     ratingList.clear();
                 }
+                // generate prediction result
                 result = new ArrayList<>();
                 result.add(userID);
                 result.add(movieID);
-                result.add(mthds.PredictByCosVecSim(trainDataSet, movieID));
+                switch (type.name()) {
+                    case "CosVecSim":
+                        result.add(mthds.PredictByCosVecSim(trainDataSet, movieID));
+                        break;
+                    case "PearsonCorr":
+                        result.add(mthds.PredictByPearsonCorr(trainDataSet, movieID));
+                        break;
+                    default:
+                        System.out.println("[Error]: Cannot recognize the method");
+                }
                 resultSet.add(result);
             } else {
                 System.err.println("[Error] invalid data (MovieID: "
