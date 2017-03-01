@@ -24,8 +24,6 @@ public class UserBasedCollaborativeFiltering {
         trainDataSet = new ArrayList<>();
     }
 
-
-
     // Set train.txt to trainDataSet
     public void setTrainDataSet(String fName) throws IOException{
         FileReader fReader = new FileReader(fName);
@@ -136,7 +134,7 @@ public class UserBasedCollaborativeFiltering {
                 resultSet.add(result);
             } else {
                 System.err.println("[Error] invalid data (MovieID: "
-                                   + movieID + ", " + rating +")");
+                        + movieID + ", " + rating +")");
             }
         }
         fReader.close();
