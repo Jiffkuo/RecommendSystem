@@ -23,6 +23,7 @@ public class UserBasedCollaborativeFilteringTest {
         // setTrainFile
         String inPath = "./GeneralPatterns/";
         //String inPath = "./SimplePatterns/";
+        String outPath = "./Results/UserBased/";
         String trainFile = inPath + train;
         String testFile = "";
         System.out.println("Set " + trainFile + " data");
@@ -30,23 +31,21 @@ public class UserBasedCollaborativeFilteringTest {
 
         // execution
         // run Cosine Vector Similarity
-        String path = "./Results/UserBased/CosineVecSim/";
         for (int i = 0; i < text.length; i++) {
             System.out.println("Execuing with Cosine Similarity method");
             sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.CosVecSim);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
-            sol.getRecommendResult(path, result[i]);
+            sol.getRecommendResult(outPath + "CosineVecSim/", result[i]);
         }
 
         // run Pearson Correlation
-        path = "./Results/UserBased/PearsonCorr/";
         for (int i = 0; i < text.length; i++) {
             System.out.println("Execuing with Pearon Correlation method");
             sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.PearsonCorr);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
-            sol.getRecommendResult(path, result[i]);
+            sol.getRecommendResult(outPath + "PearsonCorr/", result[i]);
         }
     }
 
