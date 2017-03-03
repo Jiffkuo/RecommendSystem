@@ -18,10 +18,12 @@ public class UserBasedCollaborativeFiltering {
     // private data variable
     private List<HashMap<Integer, Integer>> trainDataSet;
     private List<List<Integer>> resultSet;
+    Methods mthds;
 
     // Constructor
     public UserBasedCollaborativeFiltering() {
         trainDataSet = new ArrayList<>();
+        mthds = new Methods();
     }
 
     // Set train.txt to trainDataSet
@@ -44,6 +46,9 @@ public class UserBasedCollaborativeFiltering {
             trainDataSet.add(movieRating);
         }
         fReader.close();
+
+        // calculate inverse user frequency
+        mthds.inverseUserFrequency(trainDataSet);
         // debug purpose
         System.out.println("[Info]Number of user = " + trainDataSet.size());
         System.out.println("[Info]Number of movie = " + trainDataSet.get(0).size());
@@ -80,8 +85,6 @@ public class UserBasedCollaborativeFiltering {
         List<Integer> movieIDList = new ArrayList<>();
         List<Integer> result;
         int curUserID = 0;
-        // Method function
-        Methods mthds = new Methods();
 
         // set new resultSet
         resultSet = new ArrayList<>();
