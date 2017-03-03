@@ -27,7 +27,7 @@ public class UserBasedCollaborativeFiltering {
     }
 
     // Set train.txt to trainDataSet
-    public void setTrainDataSet(String fName) throws IOException{
+    public void setTrainDataSetAndInitialize(String fName, double caseampRHO) throws IOException{
         FileReader fReader = new FileReader(fName);
         BufferedReader bufReader = new BufferedReader(fReader);
         String line = "";
@@ -48,7 +48,7 @@ public class UserBasedCollaborativeFiltering {
         fReader.close();
 
         // calculate inverse user frequency and similar user rated movie average
-        mthds.initialization(trainDataSet);
+        mthds.initialization(trainDataSet, caseampRHO);
 
         // debug purpose
         System.out.println("[Info] Number of user = " + trainDataSet.size());
@@ -119,10 +119,11 @@ public class UserBasedCollaborativeFiltering {
                         break;
                     case "PearsonCorr":
                     case "PearsonCorrIUF":
+                    case "PearsonCorrCase":
                         outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID, type);
                         break;
                     default:
-                        System.out.println("[Error]: Cannot recognize the method");
+                        System.out.println("[Error]: [1]Cannot recognize the method");
                 }
                 // debug purpose
                 //System.out.println(outRating);
