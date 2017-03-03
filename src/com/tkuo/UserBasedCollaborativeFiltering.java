@@ -47,11 +47,12 @@ public class UserBasedCollaborativeFiltering {
         }
         fReader.close();
 
-        // calculate inverse user frequency
-        mthds.inverseUserFrequency(trainDataSet);
+        // calculate inverse user frequency and similar user rated movie average
+        mthds.initialization(trainDataSet);
+
         // debug purpose
-        System.out.println("[Info]Number of user = " + trainDataSet.size());
-        System.out.println("[Info]Number of movie = " + trainDataSet.get(0).size());
+        System.out.println("[Info] Number of user = " + trainDataSet.size());
+        System.out.println("[Info] Number of movie = " + trainDataSet.get(0).size());
     }
 
     // generate result to text file
@@ -117,7 +118,8 @@ public class UserBasedCollaborativeFiltering {
                         outRating = mthds.PredictByCosVecSim(trainDataSet, movieID);
                         break;
                     case "PearsonCorr":
-                        outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID);
+                    case "PearsonCorrIUF":
+                        outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID, type);
                         break;
                     default:
                         System.out.println("[Error]: Cannot recognize the method");
