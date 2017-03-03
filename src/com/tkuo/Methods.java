@@ -21,8 +21,10 @@ public class Methods {
     private List<Double> similarUsersAvgRating;
     private double       activeUserAvgRating;
     private double[]     iufArray;
+    private double       caseampRHO;
+    private double[]     movieAvgRating;
 
-    // Support two methods
+    // Support four methods
     public enum MethodType {
         CosVecSim,
         PearsonCorr,
@@ -48,12 +50,14 @@ public class Methods {
      * - rated movie average per similar user
      * Can only calculate once
      */
-    public void initialization(List<HashMap<Integer, Integer>> trainDataSet) {
+    public void initialization(List<HashMap<Integer, Integer>> trainDataSet, double rho) {
         double totalNumUser = trainDataSet.size();
         int totalRatedValue = 0;
         int totalRatedCnt = 0;
         int totalMovies = trainDataSet.get(0).size();
         iufArray = new double[totalMovies];
+        movieAvgRating = new double[totalMovies];
+
         // find number of users have rated movie
         for (int userID = 0; userID < trainDataSet.size(); userID++) {
             HashMap<Integer, Integer> allMovies = trainDataSet.get(userID);
@@ -61,6 +65,7 @@ public class Methods {
                 if (pair.getValue() != 0) {
                     // item: movie
                     iufArray[pair.getKey()-1]++;
+                    movieAvgRating[pair.getKey() - 1] += movieAvgRating[pair.getKey() -1];
                     // value: rating
                     totalRatedValue += pair.getValue();
                     totalRatedCnt++;
@@ -71,8 +76,14 @@ public class Methods {
 
         // calculate IUF = log(totalNumber / number of user rated movie)
         for (int movieID = 0; movieID < totalMovies; movieID++) {
-            iufArray[movieID] = Math.log10(totalNumUser / iufArray[movieID]);
+            if (iufArray[movieID] != 0) {
+                movieAvgRating[movieID] = movieAvgRating[movieID] / iufArray[movieID];
+                iufArray[movieID] = Math.log10(totalNumUser / iufArray[movieID]);
+            }
         }
+
+        // for case amplification usage
+        caseampRHO = rho;
         // debug
         System.out.println("[Info] Size of similarUsersAvgRating = " + similarUsersAvgRating.size());
         System.out.println("[Info] Size of iufArray = " + iufArray.length);
@@ -180,10 +191,12 @@ public class Methods {
                     break;
                 case "PearsonCorr":
                 case "PearsonCorrIUF":
+                case "PearsonCorrCase":
                     weightList.add(PearsonCorr(vec1, vec2, user));
                     break;
                 default:
-                    System.out.println("[Error]: Cannot recognize the method");
+                    System.out.println("[Error]: [2] Cannot recognize the method");
+                    System.exit(1);
             }
         }
         // debug purpose
@@ -236,6 +249,7 @@ public class Methods {
         double totalWeight = 0;
         double totalRating = 0;
         double rating;
+        double weight;
 
         // The number of user should be the same
         int similarUserSize = trainDataSet.size();
@@ -256,20 +270,35 @@ public class Methods {
                 System.err.println("[Error] No record (userID: " + (user+1) + "movieID: " + movieID + ")");
                 rating = 0; // no rating record
             }
+            weight = weightList.get(user);
 
-            // IUF: multiply original rated movie
-            if (type.equals(MethodType.PearsonCorrIUF)) {
-                rating = rating * iufArray[movieID - 1];
+            switch (type.name()) {
+                case "PearsonCorr":
+                    break;
+                // IUF: multiply original rated movie
+                case "PearsonCorrIUF":
+                    rating = rating * iufArray[movieID - 1];
+                    break;
+                // Case Amplification: transform original weight
+                case "PearsonCorrCase":
+                    weight = weight * Math.pow(Math.abs(weight), caseampRHO - 1);
+                    break;
+                default:
+                    System.out.println("[Error]: [3] Cannot recognize the method: " + type.name());
+                    System.exit(1);
             }
 
-            // Cannot predict if rating = 0
+            // Cannot predict if rating = 0, it seems that it doesn't affect the result
+            /*
             if (rating == 0) {
                 continue;
             }
+            */
 
-            totalWeight += Math.abs(weightList.get(user));
-            totalRating += weightList.get(user) * (rating - similarUsersAvgRating.get(user));
+            totalWeight += Math.abs(weight);
+            totalRating += weight * (rating - similarUsersAvgRating.get(user));
         }
+        // return
         if (totalWeight != 0) {
             predictRating = activeUserAvgRating + totalRating / totalWeight;
         }
