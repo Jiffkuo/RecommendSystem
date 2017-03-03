@@ -26,13 +26,15 @@ public class UserBasedCollaborativeFilteringTest {
         String outPath = "./Results/UserBased/";
         String trainFile = inPath + train;
         String testFile = "";
+        // set case amplifcation rho parameter
+        double caseAmpRHO = 2.5;
         System.out.println("Set " + trainFile + " data");
-        sol.setTrainDataSet(trainFile);
+        sol.setTrainDataSetAndInitialize(trainFile, caseAmpRHO);
 
         // execution
         // run Cosine Vector Similarity
         for (int i = 0; i < text.length; i++) {
-            System.out.println("Execuing with Cosine Similarity method");
+            System.out.println("Executing with Cosine Similarity method");
             sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.CosVecSim);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
@@ -41,7 +43,7 @@ public class UserBasedCollaborativeFilteringTest {
 
         // run Pearson Correlation
         for (int i = 0; i < text.length; i++) {
-            System.out.println("Execuing with Pearon Correlation method");
+            System.out.println("Executing with Pearon Correlation method");
             sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.PearsonCorr);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
@@ -50,11 +52,20 @@ public class UserBasedCollaborativeFilteringTest {
 
         // run Pearson Correlation + IUF modification
         for (int i = 0; i < text.length; i++) {
-            System.out.println("Execuing with Pearon Correlation method + IUF modification");
+            System.out.println("Executing with Pearon Correlation method + IUF modification");
             sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.PearsonCorrIUF);
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
             sol.getRecommendResult(outPath + "PearsonCorrIUF/", result[i]);
+        }
+
+        // run Pearson Correlation + Case Amplification modification
+        for (int i = 0; i < text.length; i++) {
+            System.out.println("Executing with Pearon Correlation method + Case Amplification modification");
+            sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.PearsonCorrCase);
+            // generate result to txt file
+            System.out.println("Generate " + result[i] + " file");
+            sol.getRecommendResult(outPath + "PearsonCorrCaseAmp/", result[i]);
         }
     }
 
