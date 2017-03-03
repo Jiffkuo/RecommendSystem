@@ -47,6 +47,15 @@ public class UserBasedCollaborativeFilteringTest {
             System.out.println("Generate " + result[i] + " file");
             sol.getRecommendResult(outPath + "PearsonCorr/", result[i]);
         }
+
+        // run Pearson Correlation + IUF modification
+        for (int i = 0; i < text.length; i++) {
+            System.out.println("Execuing with Pearon Correlation method + IUF modification");
+            sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.PearsonCorrIUF);
+            // generate result to txt file
+            System.out.println("Generate " + result[i] + " file");
+            sol.getRecommendResult(outPath + "PearsonCorrIUF/", result[i]);
+        }
     }
 
 }
