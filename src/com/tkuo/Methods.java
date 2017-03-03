@@ -3,6 +3,7 @@ package com.tkuo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Tzu-Chi Kuo on 2017/2/27.
@@ -19,6 +20,7 @@ public class Methods {
     private List<Double> weightList;
     private List<Double> similarUsersAvgRating;
     private double       activeUserAvgRating;
+    private double[]     iufArray;
 
     // Support two methods
     public enum MethodType {
@@ -31,11 +33,31 @@ public class Methods {
         weightList = new ArrayList<>();
         activeUserAvgRating = 3;
         similarUsersAvgRating = new ArrayList<>();
+        iufArray = new double[]{};
     }
 
     // clearn weightList for new user prediction
     public void clearWeightList() {
         weightList.clear();
+    }
+
+    // Inverse uer frequency
+    // Can only calculate once
+    public void inverseUserFrequency(List<HashMap<Integer, Integer>> trainDataSet) {
+        int totalNumUser = trainDataSet.size();
+        // find number of users have rated movie
+        for (int userID = 0; userID < trainDataSet.size(); userID++) {
+            HashMap<Integer, Integer> allMovies = trainDataSet.get(userID);
+            for (Map.Entry<Integer, Integer> pair : allMovies.entrySet()) {
+                if (pair.getValue() != 0) {
+                    iufArray[pair.getKey()]++;
+                }
+            }
+        }
+        // calculate IUF = log(totalNumber / number of user rated movie)
+        for (int movieID = 0; movieID < iufArray.length; movieID++) {
+            iufArray[movieID] = Math.log10(totalNumUser / iufArray[movieID]);
+        }
     }
 
     // CosineVectorSimilarity
@@ -131,6 +153,7 @@ public class Methods {
             vec2 = new ArrayList<>();
             for (int movieID = 0; movieID < mList.size(); movieID++) {
                 int key = mList.get(movieID);
+                // TODO: should modify to judge rating != 0 because  movieID always existed in traindata, also mList size is 5, 10, and 20, no more
                 if (traindata.containsKey(key)) {
                     vec1.add(rList.get(movieID));
                     vec2.add(traindata.get(key));
