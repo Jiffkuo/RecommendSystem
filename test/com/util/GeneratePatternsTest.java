@@ -40,8 +40,28 @@ public class GeneratePatternsTest {
 
     @Test
     public void testMAE() throws IOException {
+        // calculate cosine vector similarity
+        System.out.println("MAE for Cosine Vector Similarity");
         for (int i = 0; i < gentestans.length; i++) {
-            sol.produceMAE(path + gentestans[i], path + "./CosineVecSim/" + genresult[i]);
+            sol.produceMAE(path + gentestans[i], path + "CosineVecSim/" + genresult[i]);
+        }
+
+        // calculate Pearson correlation
+        System.out.println("\nMAE for Pearson correlation");
+        for (int i = 0; i < gentestans.length; i++) {
+            sol.produceMAE(path + gentestans[i], path + "PearsonCorr/" + genresult[i]);
+        }
+
+        // calculate Pearson correlation + IUF
+        System.out.println("\nMAE for Pearson correlation + IUF ");
+        for (int i = 0; i < gentestans.length; i++) {
+            sol.produceMAE(path + gentestans[i], path + "PearsonCorrIUF/" + genresult[i]);
+        }
+
+        // calculate Pearson correlation + Case
+        System.out.println("\nMAE for Pearson correlation + Case ");
+        for (int i = 0; i < gentestans.length; i++) {
+            sol.produceMAE(path + gentestans[i], path + "PearsonCorrCaseAmp/" + genresult[i]);
         }
     }
 }
