@@ -35,7 +35,6 @@ public class Methods {
     // constructor
     public Methods() {
         weightList = new ArrayList<>();
-        activeUserAvgRating = 3;
         similarUsersAvgRating = new ArrayList<>();
     }
 
@@ -145,10 +144,15 @@ public class Methods {
 
         // accumulate weight
         for (int i = 0; i < lenVec; i++) {
+            if (vec2.get(i) == 0) {
+                continue;
+            }
+
             dotProduct += (vec1.get(i) - avgVec1) * (vec2.get(i) - avgVec2);
             norm1 += Math.pow((vec1.get(i) - avgVec1), 2);
             norm2 += Math.pow((vec2.get(i) - avgVec2), 2);
         }
+
         // Don't do Math if the numerator is zero
         if (dotProduct == 0) {
             return 0;
@@ -161,6 +165,7 @@ public class Methods {
         } else if (result > 1) {
             return 1;
         }
+
         return result;
     }
 
@@ -177,7 +182,7 @@ public class Methods {
             HashMap<Integer, Integer> traindata = trainDataSet.get(user);
             vec1 = new ArrayList<>();
             vec2 = new ArrayList<>();
-            int rating;
+            int rating = 0;
             for (int movieID = 0; movieID < mList.size(); movieID++) {
                 int key = mList.get(movieID);
                 rating = traindata.get(key);
@@ -277,11 +282,12 @@ public class Methods {
                     break;
                 // IUF: multiply original rated movie
                 case "PearsonCorrIUF":
-                    rating = rating * iufArray[movieID - 1];
+                    rating *= iufArray[movieID - 1];
+                    //weight *= iufArray[movieID - 1];
                     break;
                 // Case Amplification: transform original weight
                 case "PearsonCorrCase":
-                    weight = weight * Math.pow(Math.abs(weight), caseampRHO - 1);
+                    weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
                     break;
                 default:
                     System.out.println("[Error]: [3] Cannot recognize the method: " + type.name());
@@ -289,11 +295,10 @@ public class Methods {
             }
 
             // Cannot predict if rating = 0, it seems that it doesn't affect the result
-            /*
             if (rating == 0) {
                 continue;
             }
-            */
+
 
             totalWeight += Math.abs(weight);
             totalRating += weight * (rating - similarUsersAvgRating.get(user));
