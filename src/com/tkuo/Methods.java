@@ -1,9 +1,6 @@
 package com.tkuo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Tzu-Chi Kuo on 2017/2/27.
@@ -86,6 +83,26 @@ public class Methods {
         // debug
         System.out.println("[Info] Size of similarUsersAvgRating = " + similarUsersAvgRating.size());
         System.out.println("[Info] Size of iufArray = " + iufArray.length);
+    }
+
+    // find number of users have rated movie except predicting movie
+    public void calculateAvgRatedMovies(HashMap<Integer, Integer> allMovies, List<Integer> mlist, int userID) {
+        int totalRatedValue = 0;
+        int totalRatedCnt = 0;
+        for (Map.Entry<Integer, Integer> pair : allMovies.entrySet()) {
+            if (pair.getValue() != 0) {
+                for (int i = 0; i < mlist.size(); i++) {
+                    // don't count predicting movie and its rating
+                    if (pair.getKey() != mlist.get(i)) {
+                        // value: rating
+                        totalRatedValue += pair.getValue();
+                        totalRatedCnt++;
+                    }
+                }
+            }
+        }
+        // update average rating
+        similarUsersAvgRating.set(userID, (double) (totalRatedValue / totalRatedCnt));
     }
 
     // CosineVectorSimilarity
@@ -197,6 +214,7 @@ public class Methods {
                 case "PearsonCorr":
                 case "PearsonCorrIUF":
                 case "PearsonCorrCase":
+                    calculateAvgRatedMovies(traindata, mList, user);
                     weightList.add(PearsonCorr(vec1, vec2, user));
                     break;
                 default:
@@ -210,12 +228,13 @@ public class Methods {
     }
 
     // Based on Cosine Similarity weight information to do rating prediction
-    public double PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID) {
+    public double PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID, int K) {
         // default prediction rating = 3 if no relevant info
         double predictRating = 3;
         double totalWeight = 0;
         double totalRating = 0;
         int rating;
+        List<Double> sortedWeightList = new ArrayList<>();
 
         // The number of user should be the same
         if (trainDataSet.size() != weightList.size()) {
@@ -223,7 +242,14 @@ public class Methods {
             return 0;
         }
         // Rating prediction (Cosine Similarity)
-        // TODO: Assume all users are the most similar users, should find top K users
+        // should set top K users
+        int len = weightList.size();
+        for (int i = 0; i < len; i++) {
+            sortedWeightList.add(weightList.get(i));
+        }
+        Collections.sort(sortedWeightList, Collections.reverseOrder());
+        double bias = sortedWeightList.get(K-1);
+
         for (int user = 0; user < trainDataSet.size(); user++) {
             HashMap<Integer, Integer> traindata = trainDataSet.get(user);
             if (traindata.containsKey(movieID)) {
@@ -234,7 +260,7 @@ public class Methods {
             }
 
             // Cannot predict if rating = 0
-            if (rating == 0) {
+            if (rating == 0 || weightList.get(user) <= bias) {
                 continue;
             }
 
@@ -248,13 +274,14 @@ public class Methods {
     }
 
     // Based on Pearon Correlation weight information to do rating prediction
-    public double PredictByPearsonCorr(List<HashMap<Integer, Integer>> trainDataSet, int movieID, MethodType type) {
+    public double PredictByPearsonCorr(List<HashMap<Integer, Integer>> trainDataSet, int movieID, MethodType type, int K) {
         // set active user average rating if no relevant info
         double predictRating = activeUserAvgRating;
         double totalWeight = 0;
         double totalRating = 0;
         double rating;
         double weight;
+        List<Double> sortedWeightList = new ArrayList<>();
 
         // The number of user should be the same
         int similarUserSize = trainDataSet.size();
@@ -262,11 +289,19 @@ public class Methods {
             System.err.print("[Error] Cannot predict because invalid dataset:");
             System.err.print(" Size of User = " + similarUserSize);
             System.err.print(" Size of weight = " + weightList.size());
-            System.err.print(" Size of AvgRating = " + similarUsersAvgRating.size());
+            System.err.println(" Size of AvgRating = " + similarUsersAvgRating.size());
             return 0;
         }
+
         // Rating prediction (Predict Correlation)
-        // TODO: Assume all users are the most similar users, should find K users
+        // should set top K users
+        int len = weightList.size();
+        for (int i = 0; i < len; i++) {
+            sortedWeightList.add(weightList.get(i));
+        }
+        Collections.sort(sortedWeightList, Collections.reverseOrder());
+        double bias = sortedWeightList.get(K-1);
+
         for (int user = 0; user < trainDataSet.size(); user++) {
             HashMap<Integer, Integer> traindata = trainDataSet.get(user);
             if (traindata.containsKey(movieID)) {
@@ -276,6 +311,10 @@ public class Methods {
                 rating = 0; // no rating record
             }
             weight = weightList.get(user);
+
+            if (rating == 0 || weight <= bias) {
+                continue;
+            }
 
             switch (type.name()) {
                 case "PearsonCorr":
@@ -298,7 +337,6 @@ public class Methods {
             if (rating == 0) {
                 continue;
             }
-
 
             totalWeight += Math.abs(weight);
             totalRating += weight * (rating - similarUsersAvgRating.get(user));
