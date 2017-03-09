@@ -29,7 +29,7 @@ public class UserBasedCollaborativeFilteringTest {
         String trainFile = inPath + selftrain;
         String testFile = "";
         // set case amplifcation rho parameter
-        double caseAmpRHO = 2.5;
+        double caseAmpRHO = 1.5;
         System.out.println("Set " + trainFile + " data");
         sol.setTrainDataSetAndInitialize(trainFile, caseAmpRHO);
 
@@ -42,6 +42,33 @@ public class UserBasedCollaborativeFilteringTest {
             // generate result to txt file
             System.out.println("Generate " + selfresult[i] + " file");
             sol.getRecommendResult(outPath + "CosineVecSim/", selfresult[i]);
+        }
+        System.out.println("==========================================");
+        // run Pearson Correlation
+        for (int i = 0; i < selftext.length; i++) {
+            System.out.println("Executing with Pearon Correlation method");
+            sol.SetTestDataAndPredict(inPath + selftext[i], Methods.MethodType.PearsonCorr);
+            // generate result to txt file
+            System.out.println("Generate " + selfresult[i] + " file");
+            sol.getRecommendResult(outPath + "PearsonCorr/", selfresult[i]);
+        }
+        System.out.println("==========================================");
+        // run Pearson Correlation + IUF modification
+        for (int i = 0; i < selftext.length; i++) {
+            System.out.println("Executing with Pearon Correlation method + IUF modification");
+            sol.SetTestDataAndPredict(inPath + selftext[i], Methods.MethodType.PearsonCorrIUF);
+            // generate result to txt file
+            System.out.println("Generate " + selfresult[i] + " file");
+            sol.getRecommendResult(outPath + "PearsonCorrIUF/", selfresult[i]);
+        }
+        System.out.println("==========================================");
+        // run Pearson Correlation + Case Amplification modification
+        for (int i = 0; i < selftext.length; i++) {
+            System.out.println("Executing with Pearon Correlation method + Case Amplification modification");
+            sol.SetTestDataAndPredict(inPath + selftext[i], Methods.MethodType.PearsonCorrCase);
+            // generate result to txt file
+            System.out.println("Generate " + selfresult[i] + " file");
+            sol.getRecommendResult(outPath + "PearsonCorrCaseAmp/", selfresult[i]);
         }
     }
 
