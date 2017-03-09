@@ -7,7 +7,10 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 /**
- * Created by user on 2017/3/8.
+ * Created by Tzu-Chi Kuo on 2017/3/8.
+ * Purpose:
+ *    generate train data and test data from original train data (200 users and 1000 movies)
+ *    calculate Mean Absolute Error
  */
 public class GeneratePatternsTest {
     GeneratePatterns sol = new GeneratePatterns(200, 1000);
@@ -41,25 +44,25 @@ public class GeneratePatternsTest {
     @Test
     public void testMAE() throws IOException {
         // calculate cosine vector similarity
-        System.out.println("MAE for Cosine Vector Similarity");
+        System.out.println("\tMAE for Cosine Vector Similarity");
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "CosineVecSim/" + genresult[i]);
         }
 
         // calculate Pearson correlation
-        System.out.println("\nMAE for Pearson correlation");
+        System.out.println("\n\tMAE for Pearson correlation");
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "PearsonCorr/" + genresult[i]);
         }
 
         // calculate Pearson correlation + IUF
-        System.out.println("\nMAE for Pearson correlation + IUF ");
+        System.out.println("\n\tMAE for Pearson correlation + IUF ");
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "PearsonCorrIUF/" + genresult[i]);
         }
 
         // calculate Pearson correlation + Case
-        System.out.println("\nMAE for Pearson correlation + Case ");
+        System.out.println("\n\tMAE for Pearson correlation + Case ");
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "PearsonCorrCaseAmp/" + genresult[i]);
         }
