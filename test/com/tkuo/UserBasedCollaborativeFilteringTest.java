@@ -18,6 +18,34 @@ public class UserBasedCollaborativeFilteringTest {
     String[] result = {"result5.txt", "result10.txt", "result20.txt"};
 
     @Test
+    public void SelfTraining() throws IOException {
+        String selftrain = "gentrain.txt";
+        String[] selftext = {"gentest5.txt", "gentest10.txt", "gentest15.txt"};
+        String[] selfresult = {"genresult5.txt", "genresult10.txt", "genresult15.txt"};
+        System.out.println("Start to do self training ...");
+        // setTrainFile
+        String inPath = "./SimplePatterns/";
+        String outPath = "./SimplePatterns/";
+        String trainFile = inPath + selftrain;
+        String testFile = "";
+        // set case amplifcation rho parameter
+        double caseAmpRHO = 2.5;
+        System.out.println("Set " + trainFile + " data");
+        sol.setTrainDataSetAndInitialize(trainFile, caseAmpRHO);
+
+        // execution
+        // run Cosine Vector Similarity
+        for (int i = 0; i < selftext.length; i++) {
+            System.out.println("Executing with Cosine Similarity method");
+            sol.SetTestDataAndPredict(inPath + selftext[i], Methods.MethodType.CosVecSim);
+
+            // generate result to txt file
+            System.out.println("Generate " + selfresult[i] + " file");
+            sol.getRecommendResult(outPath + "CosineVecSim/", selfresult[i]);
+        }
+    }
+
+    @Test
     public void TestUserBasedCollaborativeFiltering() throws IOException {
         System.out.println("Start to test User-Based Collaborative Filtering ...");
         // setTrainFile
