@@ -10,6 +10,7 @@ import java.util.Random;
  * Created by Tzu-Chi Kuo on 2017/3/8.
  *   Purpose:
  *      create patterns to improve recommend system accuracy
+ *      calculate Mean Absolute Error
  */
 public class GeneratePatterns {
 
@@ -169,8 +170,8 @@ public class GeneratePatterns {
                 break;
             }
         }
-        System.out.println("sum of abs(golden-predict) = " + sum + " and total number is " + cnt);
-        System.out.println("MAE of " + tName + " = " + (double)sum/cnt);
+        //System.out.println("sum of abs(golden-predict) = " + sum + " and total number is " + cnt);
+        System.out.println("\tMAE of " + tName + " = " + (double)sum/cnt);
         gReader.close();
         tReader.close();
     }
