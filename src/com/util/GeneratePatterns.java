@@ -74,4 +74,40 @@ public class GeneratePatterns {
         }
         tWriter.close();
     }
+
+    public void produceMAE(String gName, String tName) throws IOException {
+        FileReader gReader = new FileReader(gName);
+        FileReader tReader = new FileReader(tName);
+        BufferedReader bufgReader = new BufferedReader(gReader);
+        BufferedReader buftReader = new BufferedReader(tReader);
+        String answer;
+        String test;
+        int userid = 0;
+        int movieid = 0;
+        int rating = 0;
+        int sum = 0;
+        int cnt = 0;
+
+        // read golden answer: genans.txt
+        while ((answer = bufgReader.readLine()) != null) {
+            String[] ansInfo = answer.split(" ");
+            userid = Integer.valueOf(ansInfo[0]);
+            movieid = Integer.valueOf(ansInfo[1]);
+            rating = Integer.valueOf(ansInfo[2]);
+            test = buftReader.readLine();
+            String[] testInfo = test.split(" ");
+            if (userid == Integer.valueOf(testInfo[0]) && movieid == Integer.valueOf(testInfo[1])) {
+                sum += Math.abs(rating - Integer.valueOf(testInfo[2]));
+                cnt++;
+            } else {
+                System.out.println("[Error] tuple information cannot match to do MAE");
+                System.out.println(" - userID = " + userid + ":" + Integer.valueOf(testInfo[0]));
+                System.out.println(" - movieID = " + movieid + ":" + Integer.valueOf(testInfo[1]));
+                break;
+            }
+        }
+        System.out.println("MAE of " + tName + " = " + (double)sum/cnt);
+        gReader.close();
+        tReader.close();
+    }
 }
