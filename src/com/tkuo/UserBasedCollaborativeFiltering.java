@@ -77,7 +77,7 @@ public class UserBasedCollaborativeFiltering {
 
     // CosineVectorSimilarity method
     // Assume userID is sorted order, so the sequence in List or Hash is based on the sorted userID
-    public void SetTestDataAndPredict(String fName, Methods.MethodType type) throws IOException{
+    public void SetTestDataAndPredict(String fName, Methods.MethodType type, int K) throws IOException{
         // Read Predication file
         FileReader fReader = new FileReader(fName);
         BufferedReader bufReader = new BufferedReader(fReader);
@@ -115,12 +115,12 @@ public class UserBasedCollaborativeFiltering {
                 result = new ArrayList<>();
                 switch (type.name()) {
                     case "CosVecSim":
-                        outRating = mthds.PredictByCosVecSim(trainDataSet, movieID);
+                        outRating = mthds.PredictByCosVecSim(trainDataSet, movieID, K);
                         break;
                     case "PearsonCorr":
                     case "PearsonCorrIUF":
                     case "PearsonCorrCase":
-                        outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID, type);
+                        outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID, type, K);
                         break;
                     default:
                         System.out.println("[Error]: [1]Cannot recognize the method");
