@@ -30,7 +30,7 @@ public class UserBasedCollaborativeFilteringTest {
         String testFile = "";
         // set case amplifcation rho parameter
         double caseAmpRHO = 1.5;
-        int Ktop = 110; // total user is 160
+        int Ktop = 60; // total user is 160
         System.out.println("Set " + trainFile + " data");
         sol.setTrainDataSetAndInitialize(trainFile, caseAmpRHO);
 
@@ -70,6 +70,15 @@ public class UserBasedCollaborativeFilteringTest {
             // generate result to txt file
             System.out.println("Generate " + selfresult[i] + " file");
             sol.getRecommendResult(outPath + "PearsonCorrCaseAmp/", selfresult[i]);
+        }
+        System.out.println("==========================================");
+        // run My Own Method
+        for (int i = 0; i < selftext.length; i++) {
+            System.out.println("Executing with My Own Method");
+            sol.SetTestDataAndPredict(inPath + selftext[i], Methods.MethodType.MyMethod, Ktop);
+            // generate result to txt file
+            System.out.println("Generate " + selfresult[i] + " file");
+            sol.getRecommendResult(outPath + "MyMethod/", selfresult[i]);
         }
     }
 
@@ -123,6 +132,15 @@ public class UserBasedCollaborativeFilteringTest {
             // generate result to txt file
             System.out.println("Generate " + result[i] + " file");
             sol.getRecommendResult(outPath + "PearsonCorrCaseAmp/", result[i]);
+        }
+
+        // run My Own Method
+        for (int i = 0; i < text.length; i++) {
+            System.out.println("Executing with My Own Method");
+            sol.SetTestDataAndPredict(inPath + text[i], Methods.MethodType.MyMethod, Ktop);
+            // generate result to txt file
+            System.out.println("Generate " + result[i] + " file");
+            sol.getRecommendResult(outPath + "MyMethod/", result[i]);
         }
     }
 
