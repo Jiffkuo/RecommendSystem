@@ -20,13 +20,15 @@ public class Methods {
     private double[]     iufArray;
     private double       caseampRHO;
     private double[]     movieAvgRating;
+    private int          commonUser;
 
     // Support four methods
     public enum MethodType {
         CosVecSim,
         PearsonCorr,
         PearsonCorrIUF,
-        PearsonCorrCase
+        PearsonCorrCase,
+        MyMethod
     }
 
     // constructor
@@ -61,13 +63,15 @@ public class Methods {
                 if (pair.getValue() != 0) {
                     // item: movie
                     iufArray[pair.getKey()-1]++;
-                    movieAvgRating[pair.getKey() - 1] += movieAvgRating[pair.getKey() -1];
+                    movieAvgRating[pair.getKey() - 1] += pair.getValue();
                     // value: rating
                     totalRatedValue += pair.getValue();
                     totalRatedCnt++;
                 }
             }
             similarUsersAvgRating.add((double) (totalRatedValue / totalRatedCnt));
+            totalRatedValue = 0;
+            totalRatedCnt = 0;
         }
 
         // calculate IUF = log(totalNumber / number of user rated movie)
@@ -86,14 +90,16 @@ public class Methods {
     }
 
     // find number of users have rated movie except predicting movie
-    public void calculateAvgRatedMovies(HashMap<Integer, Integer> allMovies, List<Integer> mlist, int userID) {
+    public void calculateAvgRatedMovies(HashMap<Integer, Integer> allMovies, int movieID, List<Integer> mlist, int userID) {
         int totalRatedValue = 0;
         int totalRatedCnt = 0;
         for (Map.Entry<Integer, Integer> pair : allMovies.entrySet()) {
             if (pair.getValue() != 0) {
                 for (int i = 0; i < mlist.size(); i++) {
                     // don't count predicting movie and its rating
-                    if (pair.getKey() != mlist.get(i)) {
+                    //if (pair.getKey() != mlist.get(i)) {
+                    if (pair.getKey() != movieID) {
+                    //if (pair.getKey() != movieID && pair.getKey() != mlist.get(i)) {
                         // value: rating
                         totalRatedValue += pair.getValue();
                         totalRatedCnt++;
@@ -109,9 +115,9 @@ public class Methods {
     // assume vec1.length = vec2.length
     // vec1: active user, vec2: similar user
     public double CosVecSim(ArrayList<Integer> vec1, ArrayList<Integer> vec2) {
-        int dotProduct = 0;
-        int norm1 = 0;
-        int norm2 = 0;
+        double dotProduct = 0;
+        double norm1 = 0;
+        double norm2 = 0;
 
         if (vec1.size() != vec2.size()) {
             System.err.println("[Error] Cannot calculate Cosine Vector Similarity weight");
@@ -137,9 +143,9 @@ public class Methods {
     // vec1: active user, vec2: similar user
     // Similar with Cosine Vector Similarity, need to calculate average rating
     public double PearsonCorr(ArrayList<Integer> vec1, ArrayList<Integer> vec2, int userID) {
-        int dotProduct = 0;
-        int norm1 = 0;
-        int norm2 = 0;
+        double dotProduct = 0;
+        double norm1 = 0;
+        double norm2 = 0;
         double avgVec1 = 0;
         double avgVec2;
         int lenVec = vec1.size();
@@ -164,10 +170,10 @@ public class Methods {
             if (vec2.get(i) == 0) {
                 continue;
             }
-
-            dotProduct += (vec1.get(i) - avgVec1) * (vec2.get(i) - avgVec2);
+            dotProduct += ((vec1.get(i) - avgVec1) * (vec2.get(i) - avgVec2));
             norm1 += Math.pow((vec1.get(i) - avgVec1), 2);
             norm2 += Math.pow((vec2.get(i) - avgVec2), 2);
+            commonUser++;
         }
 
         // Don't do Math if the numerator is zero
@@ -187,7 +193,7 @@ public class Methods {
     }
 
     // Use specific method to calculate weight for each user
-    public void executeWeight(List<HashMap<Integer, Integer>> trainDataSet,
+    public void executeWeight(List<HashMap<Integer, Integer>> trainDataSet, int movieID,
                               List<Integer> mList, List<Integer> rList, MethodType type) {
         // vec1: active user, vec2: similar user
         ArrayList<Integer> vec1;
@@ -200,10 +206,10 @@ public class Methods {
             vec1 = new ArrayList<>();
             vec2 = new ArrayList<>();
             int rating = 0;
-            for (int movieID = 0; movieID < mList.size(); movieID++) {
-                int key = mList.get(movieID);
+            for (int movieid = 0; movieid < mList.size(); movieid++) {
+                int key = mList.get(movieid);
                 rating = traindata.get(key);
-                vec1.add(rList.get(movieID));
+                vec1.add(rList.get(movieid));
                 vec2.add(rating);
             }
             // store weight for each user (userID: 1 - 200)
@@ -214,7 +220,8 @@ public class Methods {
                 case "PearsonCorr":
                 case "PearsonCorrIUF":
                 case "PearsonCorrCase":
-                    calculateAvgRatedMovies(traindata, mList, user);
+                case "MyMethod":
+                    calculateAvgRatedMovies(traindata, movieID, mList, user);
                     weightList.add(PearsonCorr(vec1, vec2, user));
                     break;
                 default:
@@ -233,6 +240,7 @@ public class Methods {
         double predictRating = 3;
         double totalWeight = 0;
         double totalRating = 0;
+        double weight = 0;
         int rating;
         List<Double> sortedWeightList = new ArrayList<>();
 
@@ -260,16 +268,19 @@ public class Methods {
             }
 
             // Cannot predict if rating = 0
-            if (rating == 0 || weightList.get(user) <= bias) {
+            weight = weightList.get(user);
+            if (rating == 0 || weight <= bias) {
                 continue;
             }
-
-            totalWeight += weightList.get(user);
-            totalRating += weightList.get(user) * rating;
+            totalWeight += weight;
+            totalRating += weight * rating;
         }
         if (totalWeight != 0) {
             predictRating = totalRating / totalWeight;
+        } else if (movieAvgRating[movieID] != 0){
+            predictRating = movieAvgRating[movieID];
         }
+
         return predictRating;
     }
 
@@ -321,12 +332,17 @@ public class Methods {
                     break;
                 // IUF: multiply original rated movie
                 case "PearsonCorrIUF":
-                    rating *= iufArray[movieID - 1];
-                    //weight *= iufArray[movieID - 1];
+                    //rating *= iufArray[movieID - 1];
+                    weight *= iufArray[movieID - 1];
                     break;
                 // Case Amplification: transform original weight
                 case "PearsonCorrCase":
                     weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
+                    break;
+                case "MyMethod":
+                    weight = weight * (commonUser / (commonUser + 2));
+                    //rating = rating * (commonUser / (commonUser + 2));
+                    commonUser = 0;
                     break;
                 default:
                     System.out.println("[Error]: [3] Cannot recognize the method: " + type.name());
