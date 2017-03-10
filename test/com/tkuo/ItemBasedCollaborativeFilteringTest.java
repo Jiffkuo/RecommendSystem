@@ -6,7 +6,7 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 /**
- * Created by mac on 2017/3/9.
+ * Created by Tzu-Chi Kuo on 2017/3/9.
  */
 public class ItemBasedCollaborativeFilteringTest {
 
@@ -44,8 +44,8 @@ public class ItemBasedCollaborativeFilteringTest {
     public void TestItemBasedCollaborativeFiltering() throws IOException {
         ItemBasedCollaborativeFiltering sol = new ItemBasedCollaborativeFiltering(1000, 200);
         String train = "train.txt";
-        String[] text = {"test5.txt", "test10.txt", "test15.txt"};
-        String[] result = {"result5.txt", "result10.txt", "result15.txt"};
+        String[] text = {"test5.txt", "test10.txt", "test20.txt"};
+        String[] result = {"result5.txt", "result10.txt", "result20.txt"};
 
         System.out.println("Start to do Item-Based Collaborative Filtering ...");
         // setTrainFile
