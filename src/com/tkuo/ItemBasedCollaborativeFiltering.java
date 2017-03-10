@@ -11,16 +11,19 @@ public class ItemBasedCollaborativeFiltering {
     // private global variable
     int[][] trainDataSet;
     List<List<Integer>> resultSet;
-    double[]   avgRatingPerUser;
     List<Double> weightList;
+    double[] avgRatingPerUser;
+    double[] avgRatingPerMovie;
 
     public ItemBasedCollaborativeFiltering(int row, int col) {
         trainDataSet = new int[row][col];
         avgRatingPerUser = new double[col];
+        avgRatingPerMovie = new double[row];
+        weightList = new ArrayList<>();
     }
 
     // Set train.txt to trainDataSet
-    public void setTrainDataSetAndInitialize(String fName, double caseampRHO) throws IOException {
+    public void setTrainDataSetAndInitialize(String fName) throws IOException {
         FileReader fReader = new FileReader(fName);
         BufferedReader bufReader = new BufferedReader(fReader);
         int userid = 0;
@@ -50,6 +53,19 @@ public class ItemBasedCollaborativeFiltering {
                 }
             }
             avgRatingPerUser[user] = rates / cnt;
+            rates = 0.0;
+            cnt = 0.0;
+        }
+        rates = 0.0;
+        cnt = 0.0;
+        for(int movie = 0; movie < trainDataSet.length; movie++) {
+            for (int user = 0; user < trainDataSet[0].length; user++) {
+                if (trainDataSet[movie][user] != 0) {
+                    rates += trainDataSet[movie][user];
+                    cnt++;
+                }
+            }
+            avgRatingPerMovie[movie] = rates / cnt;
             rates = 0.0;
             cnt = 0.0;
         }
@@ -115,8 +131,8 @@ public class ItemBasedCollaborativeFiltering {
                 // generate prediction result
                 double predictRating = 0;
                 result = new ArrayList<>();
-                executeWeights(movieIDList, ratingList, movieID);
-                predictRating = predictByAdjustedCosSim();
+                executeWeights(movieIDList, movieID);
+                predictRating = predictByAdjustedCosSim(ratingList, movieID);
                 //System.out.println(outRating);
                 // round off
                 predictRating = Math.round(predictRating);
@@ -138,18 +154,14 @@ public class ItemBasedCollaborativeFiltering {
     }
 
     // calculate adjusted cosine similarity
-    public void executeWeights(List<Integer> mlist, List<Integer> rlist, int movieID) {
+    public void executeWeights(List<Integer> mlist, int movieID) {
         double dotProduct = 0;
         double norm1 = 0;
         double norm2 = 0;
         double weight = 0;
+        int common = 0;
         // each pair is needed to calculate new weight
         weightList.clear();
-
-        if (mlist.size() != rlist.size()) {
-            System.err.println("[Error] Cannot calculate Cosine Vector Similarity weight");
-            return;
-        }
 
         // Find pair with item i (similar) and j (active)
         // find all users have rated for item i (active also rates)
@@ -158,36 +170,44 @@ public class ItemBasedCollaborativeFiltering {
             for (int user = 0; user < trainDataSet[0].length; user++) {
                 int pair_i = trainDataSet[mlist.get(movie) - 1][user];
                 int pair_j = trainDataSet[movieID - 1][user];
-                if (pair_i == rlist.get(movie) && pair_j != 0) {
-                //if (pair_i !=0 && pair_j != 0) {
-                    dotProduct += (pair_i - avgRatingPerUser[user]) * (pair_j - avgRatingPerUser[user]);
-                    norm1 += Math.pow((pair_i - avgRatingPerUser[user]), 2);
-                    norm2 += Math.pow((pair_j - avgRatingPerUser[user]), 2);
+                if (pair_i != 0 && pair_j != 0) {
+                    if (pair_i > avgRatingPerUser[user] && pair_j > avgRatingPerUser[user]) {
+                        dotProduct += (pair_i - avgRatingPerUser[user]) * (pair_j - avgRatingPerUser[user]);
+                        norm1 += Math.pow((pair_i - avgRatingPerUser[user]), 2);
+                        norm2 += Math.pow((pair_j - avgRatingPerUser[user]), 2);
+                        common++;
+                    }
                 }
             }
-            // active user have 5 movies to calculate weights
-            if (dotProduct == 0) {
-                weight = 0.0;
-            } else {
-                weight = dotProduct / (norm1 * norm2);
-                if (weight < -1) {
-                    weight = -1;
-                } else if (weight > 1) {
-                    weight = 1;
-                }
+            if (common > 1) {
+                weight = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
             }
             weightList.add(weight);
             dotProduct = 0.0;
             norm1 = 0.0;
             norm2 = 0.0;
+            common = 0;
         }
     }
 
     // predication
-    public double predictByAdjustedCosSim() {
-        double result = 0.0;
+    public double predictByAdjustedCosSim(List<Integer> rlist, int movieid) {
+        double totalWeight = 0.0;
+        double totalRating = 0.0;
+        double predictRating = 0.0;
 
-        return result;
+        if (weightList.size() != rlist.size()) {
+            System.err.println("[Error] Cannot calculate Adjusted Cosine Vector Similarity weight");
+            return 0.0;
+        }
+
+        for (int i = 0; i < rlist.size(); i++) {
+            totalRating += weightList.get(i) * rlist.get(i);
+            totalWeight += weightList.get(i);
+        }
+
+        predictRating = totalRating / totalWeight;
+        return predictRating;
     }
 
 }
