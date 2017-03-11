@@ -340,6 +340,7 @@ public class Methods {
                     weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
                     break;
                 case "MyMethod":
+                    weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
                     weight = weight * (commonUser / (commonUser + 2));
                     //rating = rating * (commonUser / (commonUser + 2));
                     commonUser = 0;
