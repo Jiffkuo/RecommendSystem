@@ -92,8 +92,8 @@ public class UserBasedCollaborativeFilteringTest {
         String trainFile = inPath + train;
         String testFile = "";
         // set case amplifcation rho parameter
-        double caseAmpRHO = 1.5;
-        int Ktop = 120; // total user is 200
+        double caseAmpRHO = 2.5;
+        int Ktop = 75; // total user is 200
         System.out.println("Set " + trainFile + " data");
         sol.setTrainDataSetAndInitialize(trainFile, caseAmpRHO);
 
