@@ -20,6 +20,7 @@ public class Methods {
     private double[]     iufArray;
     private double       caseampRHO;
     private double[]     movieAvgRating;
+    private int[][]      userRateMovieCnt;
     private int          commonUser;
 
     // Support four methods
@@ -55,6 +56,7 @@ public class Methods {
         int totalMovies = trainDataSet.get(0).size();
         iufArray = new double[totalMovies];
         movieAvgRating = new double[totalMovies];
+        userRateMovieCnt = new int[(int)totalNumUser][totalMovies];
 
         // find number of users have rated movie
         for (int userID = 0; userID < trainDataSet.size(); userID++) {
@@ -67,6 +69,7 @@ public class Methods {
                     // value: rating
                     totalRatedValue += pair.getValue();
                     totalRatedCnt++;
+                    userRateMovieCnt[userID][pair.getValue() - 1]++;
                 }
             }
             similarUsersAvgRating.add((double) (totalRatedValue / totalRatedCnt));
@@ -235,7 +238,7 @@ public class Methods {
     }
 
     // Based on Cosine Similarity weight information to do rating prediction
-    public double PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID, int K) {
+    public double PredictByCosVecSim(List<HashMap<Integer, Integer>> trainDataSet, int movieID, MethodType type, int K) {
         // default prediction rating = 3 if no relevant info
         double predictRating = 3;
         double totalWeight = 0;
@@ -257,6 +260,7 @@ public class Methods {
         }
         Collections.sort(sortedWeightList, Collections.reverseOrder());
         double bias = sortedWeightList.get(K-1);
+        //double bias = 0.6;
 
         for (int user = 0; user < trainDataSet.size(); user++) {
             HashMap<Integer, Integer> traindata = trainDataSet.get(user);
@@ -272,13 +276,20 @@ public class Methods {
             if (rating == 0 || weight <= bias) {
                 continue;
             }
+
+            if (type.name() == "MyMethod") {
+                weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
+                weight = weight * (commonUser / (commonUser + 2500));
+                weight *= iufArray[movieID - 1];
+            }
+
             totalWeight += weight;
             totalRating += weight * rating;
         }
         if (totalWeight != 0) {
             predictRating = totalRating / totalWeight;
-        } else if (movieAvgRating[movieID] != 0){
-            predictRating = movieAvgRating[movieID];
+        } else if (movieAvgRating[movieID - 1] != 0){
+            predictRating = movieAvgRating[movieID - 1];
         }
 
         return predictRating;
@@ -341,8 +352,8 @@ public class Methods {
                     break;
                 case "MyMethod":
                     weight *= Math.pow(Math.abs(weight), caseampRHO - 1);
-                    weight = weight * (commonUser / (commonUser + 2));
-                    //rating = rating * (commonUser / (commonUser + 2));
+                    weight = weight * (commonUser / (commonUser + 2500));
+                    //weight = weight * (userRateMovieCnt[user][movieID])/ (userRateMovieCnt[0].length + 2));
                     commonUser = 0;
                     break;
                 default:
@@ -351,9 +362,11 @@ public class Methods {
             }
 
             // Cannot predict if rating = 0, it seems that it doesn't affect the result
+            /*
             if (rating == 0) {
                 continue;
             }
+            */
 
             totalWeight += Math.abs(weight);
             totalRating += weight * (rating - similarUsersAvgRating.get(user));

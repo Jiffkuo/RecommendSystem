@@ -40,7 +40,8 @@ public class UserBasedCollaborativeFiltering {
             movieRating = new HashMap<>();
             // set <movieID, rating> per UserID
             for (int movieID = 1; movieID <= ratings.length; movieID++) {
-                movieRating.put(movieID, Integer.valueOf(ratings[movieID - 1]));
+                int rating = Integer.valueOf(ratings[movieID - 1]);
+                movieRating.put(movieID, rating);
             }
             // length of traindataSet = # of user = 200
             trainDataSet.add(movieRating);
@@ -114,7 +115,7 @@ public class UserBasedCollaborativeFiltering {
                 result = new ArrayList<>();
                 switch (type.name()) {
                     case "CosVecSim":
-                        outRating = mthds.PredictByCosVecSim(trainDataSet, movieID, K);
+                        outRating = mthds.PredictByCosVecSim(trainDataSet, movieID, type, K);
                         break;
                     case "PearsonCorr":
                     case "PearsonCorrIUF":
@@ -122,9 +123,9 @@ public class UserBasedCollaborativeFiltering {
                         outRating = mthds.PredictByPearsonCorr(trainDataSet, movieID, type, K);
                         break;
                     case "MyMethod":
-                        double outCosine = mthds.PredictByCosVecSim(trainDataSet, movieID, K);
+                        double outCosine = mthds.PredictByCosVecSim(trainDataSet, movieID, type, K);
                         double outPearson = mthds.PredictByPearsonCorr(trainDataSet, movieID, type, K);
-                        outRating = (0.3 * outCosine) + (0.7 * outPearson);
+                        outRating = (0.56 * outCosine) + (0.44 * outPearson);
                         break;
                     default:
                         System.out.println("[Error]: [1]Cannot recognize the method");
@@ -132,7 +133,8 @@ public class UserBasedCollaborativeFiltering {
                 // debug purpose
                 //System.out.println(outRating);
                 // round off
-                outRating = Math.round(outRating);
+                //outRating = Math.round(outRating);
+                outRating = Math.rint(outRating);
                 if (outRating > 5) {
                     outRating = 5;
                 } else if (outRating < 1) {
