@@ -48,6 +48,7 @@ public class GeneratePatternsTest {
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "CosineVecSim/" + genresult[i]);
         }
+
         // calculate Pearson correlation
         System.out.println("\n\tMAE for Pearson correlation");
         for (int i = 0; i < gentestans.length; i++) {
@@ -66,7 +67,7 @@ public class GeneratePatternsTest {
             sol.produceMAE(path + gentestans[i], path + "PearsonCorrCaseAmp/" + genresult[i]);
         }
 
-        // calculate Pearson correlation + Case
+        // calculate My Own Method
         System.out.println("\n\tMAE for My Own Method");
         for (int i = 0; i < gentestans.length; i++) {
             sol.produceMAE(path + gentestans[i], path + "MyMethod/" + genresult[i]);
